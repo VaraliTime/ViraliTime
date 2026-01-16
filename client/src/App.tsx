@@ -4,17 +4,33 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
+import Catalog from "./pages/Catalog";
+import EbookDetail from "./pages/EbookDetail";
+import Cart from "./pages/Cart";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
+import Library from "./pages/Library";
+import Admin from "./pages/Admin";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Header />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/catalog" component={Catalog} />
+        <Route path="/ebook/:slug" component={EbookDetail} />
+        <Route path="/cart" component={Cart} />
+        <Route path="/checkout/success" component={CheckoutSuccess} />
+        <Route path="/library" component={Library} />
+        <Route path="/admin" component={Admin} />
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+      <Footer />
+    </>
   );
 }
 

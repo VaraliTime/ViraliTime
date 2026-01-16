@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc, like, or, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, categories, ebooks, purchases, cartItems, InsertCategory, InsertEbook, InsertPurchase, InsertCartItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -35,7 +35,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "loginMethod"] as const;
+    const textFields = ["name", "email", "loginMethod", "stripeCustomerId"] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -89,4 +89,239 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Categories
+export async function getAllCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(categories).orderBy(categories.name);
+}
+
+export async function getCategoryById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createCategory(category: InsertCategory) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(categories).values(category);
+  return result;
+}
+
+export async function updateCategory(id: number, category: Partial<InsertCategory>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(categories).set(category).where(eq(categories.id, id));
+}
+
+export async function deleteCategory(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(categories).where(eq(categories.id, id));
+}
+
+// Ebooks
+export async function getAllEbooks() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(ebooks).orderBy(desc(ebooks.createdAt));
+}
+
+export async function getEbookById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(ebooks).where(eq(ebooks.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getEbookBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(ebooks).where(eq(ebooks.slug, slug)).limit(1);
+  return result[0];
+}
+
+export async function getFeaturedEbooks(limit: number = 6) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(ebooks).where(eq(ebooks.isFeatured, true)).limit(limit);
+}
+
+export async function getRecentEbooks(limit: number = 6) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(ebooks).orderBy(desc(ebooks.createdAt)).limit(limit);
+}
+
+export async function searchEbooks(params: {
+  query?: string;
+  categoryId?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  author?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let conditions = [];
+
+  if (params.query) {
+    conditions.push(
+      or(
+        like(ebooks.title, `%${params.query}%`),
+        like(ebooks.author, `%${params.query}%`),
+        like(ebooks.description, `%${params.query}%`)
+      )
+    );
+  }
+
+  if (params.categoryId) {
+    conditions.push(eq(ebooks.categoryId, params.categoryId));
+  }
+
+  if (params.author) {
+    conditions.push(like(ebooks.author, `%${params.author}%`));
+  }
+
+  if (params.minPrice !== undefined) {
+    conditions.push(sql`${ebooks.price} >= ${params.minPrice}`);
+  }
+
+  if (params.maxPrice !== undefined) {
+    conditions.push(sql`${ebooks.price} <= ${params.maxPrice}`);
+  }
+
+  if (conditions.length === 0) {
+    return db.select().from(ebooks).orderBy(desc(ebooks.createdAt));
+  }
+
+  return db.select().from(ebooks).where(and(...conditions)).orderBy(desc(ebooks.createdAt));
+}
+
+export async function createEbook(ebook: InsertEbook) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(ebooks).values(ebook);
+  return result;
+}
+
+export async function updateEbook(id: number, ebook: Partial<InsertEbook>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(ebooks).set(ebook).where(eq(ebooks.id, id));
+}
+
+export async function deleteEbook(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(ebooks).where(eq(ebooks.id, id));
+}
+
+// Cart
+export async function getCartItems(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const items = await db
+    .select({
+      id: cartItems.id,
+      userId: cartItems.userId,
+      ebookId: cartItems.ebookId,
+      addedAt: cartItems.addedAt,
+      ebook: ebooks,
+    })
+    .from(cartItems)
+    .leftJoin(ebooks, eq(cartItems.ebookId, ebooks.id))
+    .where(eq(cartItems.userId, userId));
+
+  return items;
+}
+
+export async function addToCart(userId: number, ebookId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if already in cart
+  const existing = await db
+    .select()
+    .from(cartItems)
+    .where(and(eq(cartItems.userId, userId), eq(cartItems.ebookId, ebookId)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return existing[0];
+  }
+
+  const result = await db.insert(cartItems).values({ userId, ebookId });
+  return result;
+}
+
+export async function removeFromCart(userId: number, ebookId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(cartItems).where(and(eq(cartItems.userId, userId), eq(cartItems.ebookId, ebookId)));
+}
+
+export async function clearCart(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(cartItems).where(eq(cartItems.userId, userId));
+}
+
+// Purchases
+export async function getUserPurchases(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const userPurchases = await db
+    .select({
+      id: purchases.id,
+      userId: purchases.userId,
+      ebookId: purchases.ebookId,
+      stripePaymentIntentId: purchases.stripePaymentIntentId,
+      stripeCheckoutSessionId: purchases.stripeCheckoutSessionId,
+      amount: purchases.amount,
+      purchasedAt: purchases.purchasedAt,
+      ebook: ebooks,
+    })
+    .from(purchases)
+    .leftJoin(ebooks, eq(purchases.ebookId, ebooks.id))
+    .where(eq(purchases.userId, userId))
+    .orderBy(desc(purchases.purchasedAt));
+
+  return userPurchases;
+}
+
+export async function createPurchase(purchase: InsertPurchase) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(purchases).values(purchase);
+  return result;
+}
+
+export async function hasPurchased(userId: number, ebookId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const result = await db
+    .select()
+    .from(purchases)
+    .where(and(eq(purchases.userId, userId), eq(purchases.ebookId, ebookId)))
+    .limit(1);
+
+  return result.length > 0;
+}
+
+export async function getPurchasedEbookIds(userId: number): Promise<number[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({ ebookId: purchases.ebookId })
+    .from(purchases)
+    .where(eq(purchases.userId, userId));
+
+  return result.map(p => p.ebookId);
+}
