@@ -70,3 +70,12 @@
 - [x] Vérification de la sécurité des téléchargements
 - [x] Tests du flux complet d'achat
 - [x] Validation de l'interface admin
+
+
+## Modifications pour ViraliTime
+- [ ] Renommer le site de "EbookStore" à "ViraliTime"
+- [x] Importer les 2 ebooks existants :
+  - [x] "L'existence de l'intelligence artificielle" (€5)
+  - [x] "Le codage enfin expliqué simplement" (€2)
+- [ ] Uploader les fichiers PDF/EPUB fournis par l'utilisateur
+- [ ] Mettre à jour le branding avec le logo ViraliTime
