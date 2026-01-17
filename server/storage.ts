@@ -39,11 +39,22 @@ async function buildDownloadUrl(
     ensureTrailingSlash(baseUrl)
   );
   downloadApiUrl.searchParams.set("path", normalizeKey(relKey));
+
   const response = await fetch(downloadApiUrl, {
     method: "GET",
     headers: buildAuthHeaders(apiKey),
   });
-  return (await response.json()).url;
+  
+  const data = await response.json();
+  
+  // CRITICAL FIX: If the proxy returns a URL that contains another URL (like CloudFront proxying Google Drive),
+  // extract the final URL to avoid Access Denied from CloudFront.
+  if (data.url && data.url.includes('https://drive.google.com')) {
+    const match = data.url.match(/https:\/\/drive\.google\.com\/.*/);
+    if (match) return match[0];
+  }
+
+  return data.url;
 }
 
 function ensureTrailingSlash(value: string): string {
@@ -63,45 +74,41 @@ function toFormData(
     typeof data === "string"
       ? new Blob([data], { type: contentType })
       : new Blob([data as any], { type: contentType });
+
   const form = new FormData();
   form.append("file", blob, fileName || "file");
   return form;
 }
 
-function buildAuthHeaders(apiKey: string): HeadersInit {
-  return { Authorization: `Bearer ${apiKey}` };
-}
-
-export async function storagePut(
-  relKey: string,
-  data: Buffer | Uint8Array | string,
-  contentType = "application/octet-stream"
-): Promise<{ key: string; url: string }> {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
-  const uploadUrl = buildUploadUrl(baseUrl, key);
-  const formData = toFormData(data, contentType, key.split("/").pop() ?? key);
-  const response = await fetch(uploadUrl, {
-    method: "POST",
-    headers: buildAuthHeaders(apiKey),
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const message = await response.text().catch(() => response.statusText);
-    throw new Error(
-      `Storage upload failed (${response.status} ${response.statusText}): ${message}`
-    );
-  }
-  const url = (await response.json()).url;
-  return { key, url };
-}
-
-export async function storageGet(relKey: string): Promise<{ key: string; url: string; }> {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
+function buildAuthHeaders(apiKey: string): Record<string, string> {
   return {
-    key,
-    url: await buildDownloadUrl(baseUrl, key, apiKey),
+    Authorization: `Bearer ${apiKey}`,
   };
 }
+
+export const storage = {
+  upload: async (
+    relKey: string,
+    data: Buffer | Uint8Array | string,
+    contentType: string,
+    fileName: string
+  ): Promise<void> => {
+    const { baseUrl, apiKey } = getStorageConfig();
+    const uploadUrl = buildUploadUrl(baseUrl, relKey);
+
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      headers: buildAuthHeaders(apiKey),
+      body: toFormData(data, contentType, fileName),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+  },
+
+  getDownloadUrl: async (relKey: string): Promise<string> => {
+    const { baseUrl, apiKey } = getStorageConfig();
+    return buildDownloadUrl(baseUrl, relKey, apiKey);
+  },
+};
