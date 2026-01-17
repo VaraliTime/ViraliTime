@@ -94,3 +94,7 @@
 - [x] Ajouter un tableau des ventes avec actualisation en temps réel
 - [x] Mettre à jour le texte d'accueil : "Apprends plus vite. Progresse plus fort."
 - [x] Ajouter le sous-titre : "Ne repousse pas ta réussite à demain."
+
+
+## Bugs à corriger
+- [x] Le bouton "Procéder au paiement" ne fonctionne pas (correction : version API Stripe)

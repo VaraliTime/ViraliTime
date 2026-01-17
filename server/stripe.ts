@@ -1,13 +1,12 @@
 import Stripe from 'stripe';
+import type { Stripe as StripeType } from 'stripe';
 import { ENV } from './_core/env';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY is not set');
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-12-15.clover',
-});
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function createCheckoutSession(params: {
   ebookIds: number[];
