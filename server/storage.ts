@@ -29,6 +29,11 @@ async function buildDownloadUrl(
   relKey: string,
   apiKey: string
 ): Promise<string> {
+  // If relKey is already a full URL (like Google Drive), return it directly
+  if (relKey.startsWith('http://') || relKey.startsWith('https://')) {
+    return relKey;
+  }
+
   const downloadApiUrl = new URL(
     "v1/storage/downloadUrl",
     ensureTrailingSlash(baseUrl)
