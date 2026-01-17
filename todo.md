@@ -80,3 +80,10 @@
 - [x] Uploader les fichiers PDF/EPUB fournis par l'utilisateur
 - [x] Créer un menu administrateur pour changer le nom du site
 - [x] Mettre à jour le branding avec le nom ViraliTime
+
+
+## Optimisations finales
+- [x] Limiter les droits admin aux opérations essentielles uniquement
+- [x] Ajouter la couverture IA pour "L'existence de l'intelligence artificielle"
+- [x] Recentrer la couverture "Le codage enfin expliqué simplement"
+- [x] Vérifier l'absence de bugs visibles

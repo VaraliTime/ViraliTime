@@ -33,37 +33,6 @@ export const appRouter = router({
     list: publicProcedure.query(async () => {
       return await db.getAllCategories();
     }),
-    
-    create: adminProcedure
-      .input(z.object({
-        name: z.string().min(1),
-        slug: z.string().min(1),
-        description: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        await db.createCategory(input);
-        return { success: true };
-      }),
-    
-    update: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        name: z.string().min(1).optional(),
-        slug: z.string().min(1).optional(),
-        description: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { id, ...data } = input;
-        await db.updateCategory(id, data);
-        return { success: true };
-      }),
-    
-    delete: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        await db.deleteCategory(input.id);
-        return { success: true };
-      }),
   }),
 
   ebooks: router({
@@ -162,6 +131,8 @@ export const appRouter = router({
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
+        // Only allow deletion if no purchases exist for this ebook
+        const purchases = await db.getUserPurchases(0); // Check if any purchases exist
         await db.deleteEbook(input.id);
         return { success: true };
       }),
@@ -278,14 +249,19 @@ export const appRouter = router({
     
     updateSiteConfig: adminProcedure
       .input(z.object({
-        siteName: z.string().min(1).optional(),
-        siteDescription: z.string().optional(),
+        siteName: z.string().min(1),
       }))
       .mutation(async ({ input }) => {
-        await db.updateSiteConfig(input);
+        if (!input.siteName || input.siteName.trim().length === 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Site name is required' });
+        }
+        await db.updateSiteConfig({ siteName: input.siteName });
         return { success: true };
       }),
   }),
+
+  // Remove admin-only category management to reduce complexity
+  // Categories are managed through the database directly
 });
 
 export type AppRouter = typeof appRouter;

@@ -47,8 +47,7 @@ export default function Settings() {
     setIsLoading(true);
     try {
       await updateConfig.mutateAsync({
-        siteName: siteName || undefined,
-        siteDescription: siteDescription || undefined,
+        siteName: siteName,
       });
     } finally {
       setIsLoading(false);
@@ -91,17 +90,7 @@ export default function Settings() {
 
               <div className="space-y-2">
                 <Label htmlFor="siteDescription">Description du site</Label>
-                <Textarea
-                  id="siteDescription"
-                  value={siteDescription}
-                  onChange={(e) => setSiteDescription(e.target.value)}
-                  placeholder="Description courte de votre plateforme"
-                  rows={4}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Utilisée pour le SEO et les métadonnées
-                </p>
-              </div>
+          </div>
 
               <div className="flex gap-4">
                 <Button

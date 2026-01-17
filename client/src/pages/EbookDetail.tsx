@@ -77,13 +77,15 @@ export default function EbookDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left: Image */}
-          <div>
+          <div className="flex items-center justify-center">
             {ebook.coverImageUrl ? (
-              <img
-                src={ebook.coverImageUrl}
-                alt={ebook.title}
-                className="w-full rounded-lg shadow-lg"
-              />
+              <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                <img
+                  src={ebook.coverImageUrl}
+                  alt={ebook.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             ) : (
               <div className="w-full aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
                 <BookOpen className="w-24 h-24 text-muted-foreground" />
