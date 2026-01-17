@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, Edit, Trash2, Upload } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Upload, Settings } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 export default function Admin() {
   const { user, isAuthenticated } = useAuth();
@@ -157,21 +158,28 @@ export default function Admin() {
     );
   }
 
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container py-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-foreground">Administration des Ebooks</h1>
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setLocation("/settings")}>
+              <Settings className="w-4 h-4 mr-2" />
+              Paramètres
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
             setIsAddDialogOpen(open);
             if (!open) resetForm();
           }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter un ebook
-              </Button>
-            </DialogTrigger>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter un ebook
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -294,8 +302,9 @@ export default function Admin() {
                   </Button>
                 </div>
               </form>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <Card className="bg-card text-card-foreground">

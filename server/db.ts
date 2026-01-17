@@ -1,6 +1,6 @@
-import { eq, and, desc, like, or, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, like, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, categories, ebooks, purchases, cartItems, InsertCategory, InsertEbook, InsertPurchase, InsertCartItem } from "../drizzle/schema";
+import { InsertUser, users, categories, ebooks, purchases, cartItems, siteConfig, InsertCategory, InsertEbook, InsertPurchase, InsertCartItem, InsertSiteConfig } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -324,4 +324,39 @@ export async function getPurchasedEbookIds(userId: number): Promise<number[]> {
     .where(eq(purchases.userId, userId));
 
   return result.map(p => p.ebookId);
+}
+
+// Site Configuration
+export async function getSiteConfig() {
+  const db = await getDb();
+  if (!db) return { siteName: "ViraliTime", siteDescription: "" };
+  
+  const result = await db.select().from(siteConfig).limit(1);
+  
+  if (result.length === 0) {
+    // Create default config if it doesn't exist
+    await db.insert(siteConfig).values({
+      siteName: "ViraliTime",
+      siteDescription: "Plateforme de vente d'ebooks",
+    });
+    return { siteName: "ViraliTime", siteDescription: "Plateforme de vente d'ebooks" };
+  }
+  
+  return result[0];
+}
+
+export async function updateSiteConfig(config: Partial<InsertSiteConfig>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db.select().from(siteConfig).limit(1);
+  
+  if (existing.length === 0) {
+    await db.insert(siteConfig).values({
+      siteName: config.siteName || "ViraliTime",
+      siteDescription: config.siteDescription,
+    });
+  } else {
+    await db.update(siteConfig).set(config).where(eq(siteConfig.id, existing[0].id));
+  }
 }

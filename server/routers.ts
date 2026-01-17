@@ -270,6 +270,22 @@ export const appRouter = router({
         return { url: downloadUrl, filename: `${ebook.slug}.${input.format}` };
       }),
   }),
+
+  config: router({
+    getSiteConfig: publicProcedure.query(async () => {
+      return await db.getSiteConfig();
+    }),
+    
+    updateSiteConfig: adminProcedure
+      .input(z.object({
+        siteName: z.string().min(1).optional(),
+        siteDescription: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateSiteConfig(input);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

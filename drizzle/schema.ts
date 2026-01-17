@@ -95,3 +95,16 @@ export const cartItems = mysqlTable("cartItems", {
 
 export type CartItem = typeof cartItems.$inferSelect;
 export type InsertCartItem = typeof cartItems.$inferInsert;
+
+/**
+ * Site configuration - stores site-wide settings
+ */
+export const siteConfig = mysqlTable("siteConfig", {
+  id: int("id").autoincrement().primaryKey(),
+  siteName: varchar("siteName", { length: 255 }).notNull().default("ViraliTime"),
+  siteDescription: text("siteDescription"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SiteConfig = typeof siteConfig.$inferSelect;
+export type InsertSiteConfig = typeof siteConfig.$inferInsert;
