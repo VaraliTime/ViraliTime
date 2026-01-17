@@ -87,3 +87,10 @@
 - [x] Ajouter la couverture IA pour "L'existence de l'intelligence artificielle"
 - [x] Recentrer la couverture "Le codage enfin expliqué simplement"
 - [x] Vérifier l'absence de bugs visibles
+
+
+## Corrections et améliorations finales
+- [x] Supprimer et recoder les droits administrateur correctement
+- [x] Ajouter un tableau des ventes avec actualisation en temps réel
+- [x] Mettre à jour le texte d'accueil : "Apprends plus vite. Progresse plus fort."
+- [x] Ajouter le sous-titre : "Ne repousse pas ta réussite à demain."

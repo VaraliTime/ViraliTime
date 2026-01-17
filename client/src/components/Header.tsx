@@ -18,10 +18,9 @@ export default function Header() {
   const { data: cartItems } = trpc.cart.get.useQuery(undefined, {
     enabled: isAuthenticated,
   });
-  const { data: siteConfig } = trpc.config.getSiteConfig.useQuery();
 
   const cartCount = cartItems?.length || 0;
-  const siteName = siteConfig?.siteName || "ViraliTime";
+  const siteName = "ViraliTime";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,7 +28,7 @@ export default function Header() {
         <Link href="/">
           <div className="flex items-center gap-2 cursor-pointer">
             <BookOpen className="w-8 h-8 text-primary" />
-            <span className="text-2xl font-bold text-foreground">{siteName}</span>
+            <span className="text-2xl font-bold text-foreground">ViraliTime</span>
           </div>
         </Link>
 

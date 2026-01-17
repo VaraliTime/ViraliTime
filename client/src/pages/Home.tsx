@@ -39,10 +39,10 @@ export default function Home() {
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-foreground">
-              Découvrez votre prochaine lecture
+              Apprends plus vite. Progresse plus fort.
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-              Une collection soigneusement sélectionnée d'ebooks pour tous les passionnés de lecture
+              Ne repousse pas ta réussite à demain.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Link href="/catalog">

@@ -242,26 +242,7 @@ export const appRouter = router({
       }),
   }),
 
-  config: router({
-    getSiteConfig: publicProcedure.query(async () => {
-      return await db.getSiteConfig();
-    }),
-    
-    updateSiteConfig: adminProcedure
-      .input(z.object({
-        siteName: z.string().min(1),
-      }))
-      .mutation(async ({ input }) => {
-        if (!input.siteName || input.siteName.trim().length === 0) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Site name is required' });
-        }
-        await db.updateSiteConfig({ siteName: input.siteName });
-        return { success: true };
-      }),
-  }),
-
-  // Remove admin-only category management to reduce complexity
-  // Categories are managed through the database directly
+  // Configuration removed - simplified admin system
 });
 
 export type AppRouter = typeof appRouter;

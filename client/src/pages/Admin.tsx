@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, Edit, Trash2, Upload, Settings } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Upload, BarChart3 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { useLocation } from "wouter";
 
 export default function Admin() {
   const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingEbook, setEditingEbook] = useState<any>(null);
 
@@ -158,22 +159,20 @@ export default function Admin() {
     );
   }
 
-  const [, setLocation] = useLocation();
-
   return (
     <div className="min-h-screen bg-background">
       <div className="container py-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-foreground">Administration des Ebooks</h1>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setLocation("/settings")}>
-              <Settings className="w-4 h-4 mr-2" />
-              Paramètres
+            <Button variant="outline" onClick={() => setLocation("/sales")}>
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Tableau des ventes
             </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-            setIsAddDialogOpen(open);
-            if (!open) resetForm();
-          }}>
+              setIsAddDialogOpen(open);
+              if (!open) resetForm();
+            }}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
@@ -302,7 +301,7 @@ export default function Admin() {
                   </Button>
                 </div>
               </form>
-              </DialogContent>
+                </DialogContent>
             </Dialog>
           </div>
         </div>

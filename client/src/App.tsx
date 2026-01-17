@@ -13,7 +13,7 @@ import Cart from "./pages/Cart";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Library from "./pages/Library";
 import Admin from "./pages/Admin";
-import Settings from "./pages/Settings";
+import Sales from "./pages/Sales";
 
 function Router() {
   return (
@@ -27,7 +27,7 @@ function Router() {
         <Route path="/checkout/success" component={CheckoutSuccess} />
         <Route path="/library" component={Library} />
         <Route path="/admin" component={Admin} />
-        <Route path="/settings" component={Settings} />
+        <Route path="/sales" component={Sales} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
