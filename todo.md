@@ -97,4 +97,4 @@
 
 
 ## Bugs à corriger
-- [x] Le bouton "Procéder au paiement" ne fonctionne pas (correction : version API Stripe)
+- [x] Le bouton "Procéder au paiement" ne fonctionne pas (correction : version API Stripe) - Vérifié et fonctionnel
