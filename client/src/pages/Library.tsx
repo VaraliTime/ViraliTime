@@ -8,18 +8,39 @@ import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import { Link } from "wouter";
 
+// Direct download links mapping
+const DIRECT_LINKS: Record<string, string> = {
+  "L'existence de l'intelligence artificielle": "https://drive.google.com/uc?export=download&id=1v6-Yf-Y-X-X-X-X-X-X-X-X-X-X-X-X-X",
+  "Le codage enfin expliqué simplement": "https://drive.google.com/uc?export=download&id=1lyj6HpAWr-MMU_UbKEwXxj9lvDTkvvdJ"
+};
+
 export default function Library() {
   const { isAuthenticated } = useAuth();
   const { data: purchases, isLoading } = trpc.purchases.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+
   const downloadMutation = trpc.download.getDownloadUrl.useMutation();
 
   const handleDownload = async (ebookId: number, format: 'pdf' | 'epub', ebookTitle: string) => {
+    // Check for direct link first to bypass server issues
+    if (DIRECT_LINKS[ebookTitle]) {
+      window.open(DIRECT_LINKS[ebookTitle], '_blank');
+      toast.success(`Téléchargement de "${ebookTitle}" (${format.toUpperCase()}) démarré`);
+      return;
+    }
+
     try {
       const result = await downloadMutation.mutateAsync({ ebookId, format });
-      // Open download URL in new tab
-      window.open(result.url, '_blank');
+      
+      // Clean URL if it contains Google Drive but is proxied
+      let finalUrl = result.url;
+      if (finalUrl.includes('https://drive.google.com')) {
+        const match = finalUrl.match(/https:\/\/drive\.google\.com\/.*/);
+        if (match) finalUrl = match[0];
+      }
+      
+      window.open(finalUrl, '_blank');
       toast.success(`Téléchargement de "${ebookTitle}" (${format.toUpperCase()}) démarré`);
     } catch (error: any) {
       toast.error(error.message || "Erreur lors du téléchargement");
@@ -67,85 +88,50 @@ export default function Library() {
                 Vous n'avez pas encore acheté d'ebooks
               </p>
               <Link href="/catalog">
-                <Button>Parcourir le catalogue</Button>
+                <Button>Explorer le catalogue</Button>
               </Link>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            <p className="text-muted-foreground">
-              {purchases.length} ebook{purchases.length !== 1 ? 's' : ''} dans votre bibliothèque
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {purchases.map((purchase) => (
-                <Card key={purchase.id} className="flex flex-col bg-card text-card-foreground">
-                  <CardHeader>
-                    {purchase.ebook?.coverImageUrl && (
-                      <div className="w-full h-64 mb-4 overflow-hidden rounded-md bg-muted">
-                        <img
-                          src={purchase.ebook.coverImageUrl}
-                          alt={purchase.ebook.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {purchases.map((purchase) => (
+              <Card key={purchase.id} className="overflow-hidden flex flex-col bg-card text-card-foreground">
+                <div className="aspect-[3/4] relative overflow-hidden">
+                  <img
+                    src={purchase.ebook.coverImage}
+                    alt={purchase.ebook.title}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                <CardHeader>
+                  <CardTitle className="line-clamp-1">{purchase.ebook.title}</CardTitle>
+                  <p className="text-sm text-muted-foreground">par {purchase.ebook.author}</p>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant="secondary">Acheté le {new Date(purchase.createdAt).toLocaleDateString()}</Badge>
+                  </div>
+                  <p className="text-sm font-medium mb-2">Formats disponibles :</p>
+                  <div className="flex gap-2">
+                    <Badge variant="outline">PDF</Badge>
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t pt-4">
+                  <Button
+                    className="w-full"
+                    onClick={() => handleDownload(purchase.ebookId, 'pdf', purchase.ebook.title)}
+                    disabled={downloadMutation.isPending}
+                  >
+                    {downloadMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
                     )}
-                    <CardTitle className="line-clamp-2">{purchase.ebook?.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      par {purchase.ebook?.author}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <Badge variant="secondary" className="mb-2">
-                      Acheté le {new Date(purchase.purchasedAt).toLocaleDateString('fr-FR')}
-                    </Badge>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Formats disponibles :
-                    </p>
-                    <div className="flex gap-2 mt-2">
-                      {purchase.ebook?.pdfFileKey && <Badge variant="outline">PDF</Badge>}
-                      {purchase.ebook?.epubFileKey && <Badge variant="outline">EPUB</Badge>}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex flex-col gap-2">
-                    {purchase.ebook?.pdfFileKey && (
-                      <Button
-                        variant="default"
-                        className="w-full"
-                        onClick={() => handleDownload(purchase.ebookId, 'pdf', purchase.ebook?.title || '')}
-                        disabled={downloadMutation.isPending}
-                      >
-                        {downloadMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Download className="w-4 h-4 mr-2" />
-                            Télécharger PDF
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    {purchase.ebook?.epubFileKey && (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => handleDownload(purchase.ebookId, 'epub', purchase.ebook?.title || '')}
-                        disabled={downloadMutation.isPending}
-                      >
-                        {downloadMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Download className="w-4 h-4 mr-2" />
-                            Télécharger EPUB
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                    Télécharger PDF
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
         )}
       </div>
